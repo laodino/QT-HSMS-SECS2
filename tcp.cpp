@@ -1,8 +1,9 @@
 ﻿#include "tcp.h"
-
+#pragma execution_character_set("utf-8")
 TCP::TCP()
 {
-
+   tcp_socket = new QTcpSocket();
+   tcp_server = new QTcpServer();
 }
 
 TCP::~TCP()
@@ -10,13 +11,13 @@ TCP::~TCP()
 
 }
 
-void TCP::listenPort(quint16 port)
+void TCP::listenPort(const QHostAddress address, const quint16 port)
 {
     if(!tcp_server->isListening()){
         qDebug()<<"关闭端口监听";
         tcp_server->close();
     }
-    if(!tcp_server->listen(QHostAddress::AnyIPv4, port))
+    if(!tcp_server->listen(address, port))
     {
         qDebug()<<"监听启动失败："<<tcp_server->errorString();
     }
@@ -33,7 +34,7 @@ void TCP::OneNewConnection()
     qDebug()<<"端口号:"<<QString::number(tcp_socket->peerPort());
     connect(tcp_socket,&QTcpSocket::readyRead,this,&TCP::ReadData);
     connect(tcp_socket,&QTcpSocket::disconnected,this,&TCP::ClientDisconnect);
-   emit connected();
+    emit connected();
 }
 
 void TCP::ReadData()

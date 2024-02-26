@@ -25,8 +25,9 @@ struct SECS_CFG
     unsigned int   t7;			       // not selected (connection idle) timeout
     unsigned int   t8;			       // network inter-character timeout
 
-    unsigned int   link_test_interval; // in msec, 0 means disabled
+    unsigned int   link_test_interval; // in msec, 0 means disabled,心跳间隔
 
+    QString local_ip;
     unsigned short local_port;
 
     unsigned short device_id;          //设备号

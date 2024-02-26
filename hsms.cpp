@@ -1,4 +1,5 @@
 ﻿#include "hsms.h"
+#pragma execution_character_set("utf-8")
 
 HSMS::HSMS()
 {
@@ -13,7 +14,7 @@ void HSMS::initConnect()
 
     connect(tcp,&TCP::connected,this,[=]{
         //切换当前状态
-        current_state = HSMSState::NOTCONNECTED;
+        current_state = HSMSState::NOTSELECTED;
         //生成随机句柄
         qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
         uint32_t rand = qrand();
@@ -29,7 +30,7 @@ void HSMS::receiveData(QByteArray data)
 
 bool HSMS::createConnection(const SECS_CFG &sc)
 {
-    tcp->listenPort(sc.local_port);
+    tcp->listenPort(QHostAddress(sc.local_ip),sc.local_port);
     return true;
 }
 
@@ -40,11 +41,15 @@ void HSMS::HSMSSendMessage(const QByteArray &data)
 
 void HSMS::DataProcess(QByteArray &messagedata)
 {
+    //超时处理
+    //todo！
     HSMSMessage  newmessage ;
-    if(newmessage.fromByteArray(messagedata)){
+    if(!newmessage.fromByteArray(messagedata)){
         qDebug()<<"HSMS消息格式错误！";
         return;
     }
+    qDebug()<<"收到新消息:\r\n"
+          <<newmessage;
     switch(newmessage.getStype())
     {
     case DATA:
@@ -69,6 +74,7 @@ void HSMS::DataProcess(QByteArray &messagedata)
             st = SelectType::CONNECTIONNOTREADY;
             break;
         }
+        qDebug()<<"systembytes"<<QString("%1").arg(newmessage.getSystemByte(),8,16,QLatin1Char('0')).toUpper();
         SelectRsp(newmessage.getSessionID(),st,newmessage.getSystemByte());
         break;
     }
@@ -140,7 +146,7 @@ void  HSMS::SelectReq()
     //00 00 00 0a ff ff 00 00 00 01 00 00 00 01
     HSMSMessage *hm = new HSMSMessage();
     hm->setData(0xFFFF,0x00,0x00,0x00,0x01,systemByte,NULL);
-    qDebug()<< hm;
+    qDebug()<< *hm;
     tcp->WriteSocket(hm->data());
     delete hm;
 }
@@ -151,7 +157,7 @@ void  HSMS::SelectRsp(uint16_t sessionid,uint8_t selectstatus, uint32_t messagei
     //00 00 00 0a ff ff 00 00 00 02 00 00 00 0?
     HSMSMessage *hm = new HSMSMessage();
     hm->setData(sessionid,0x00,selectstatus,0x00,0x02,messageid,NULL);
-    qDebug()<< hm;
+    qDebug()<< *hm;
     tcp->WriteSocket(hm->data());
     delete hm;
 }
@@ -161,7 +167,7 @@ void HSMS::DeselectReq()
     //00 00 00 0a ff ff 00 00 00 03 00 00 00 0?
     HSMSMessage *hm = new HSMSMessage();
     hm->setData(0xFFFF,0x00,0x00,0x00,0x03,systemByte,NULL);
-    qDebug()<< hm;
+    qDebug()<< *hm;
     tcp->WriteSocket(hm->data());
     delete hm;
 }
@@ -171,7 +177,7 @@ void  HSMS::DeselectRsp(uint16_t sessionid,uint8_t deselectstatus,uint32_t messa
     //00 00 00 0a ff ff 00 00 00 04 00 00 00 0?
     HSMSMessage *hm = new HSMSMessage();
     hm->setData(sessionid,0x00,deselectstatus,0x00,0x04,messageid,NULL);
-    qDebug()<< hm;
+    qDebug()<< *hm;
     tcp->WriteSocket(hm->data());
     delete hm;
 }
@@ -191,7 +197,7 @@ void  HSMS::LinkTestRsp(uint32_t messageid)
     //00 00 00 0a ff ff 00 00 00 06 00 00 00 0?
     HSMSMessage *hm = new HSMSMessage();
     hm->setData(0xFFFF,0x00,0x00,0x00,0x06,messageid,NULL);
-    qDebug()<< hm;
+    qDebug()<< *hm;
     tcp->WriteSocket(hm->data());
     delete hm;
 }
@@ -201,7 +207,7 @@ void HSMS::RejectReq(uint16_t sessionid,uint8_t hb2,uint8_t hb3, uint32_t messag
     //00 00 00 0a ff ff 00 00 00 07 00 00 00 0?
     HSMSMessage *hm = new HSMSMessage();
     hm->setData(sessionid,hb2,hb3,0x00,0x07,messageid,NULL);
-    qDebug()<< hm;
+    qDebug()<< *hm;
     tcp->WriteSocket(hm->data());
     delete hm;
 }
@@ -211,7 +217,7 @@ void  HSMS::SeparateReq()
     //00 00 00 0a ff ff 00 00 00 09 00 00 00 0?
     HSMSMessage *hm = new HSMSMessage();
     hm->setData(0xFFFF,0x00,0x00,0x00,0x09,systemByte,NULL);
-    qDebug()<< hm;
+    qDebug()<< *hm;
     tcp->WriteSocket(hm->data());
     delete hm;
 }

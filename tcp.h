@@ -28,7 +28,7 @@ public:
     TCP();
     ~TCP();
 
-     void  listenPort(quint16 port);
+     void  listenPort(const QHostAddress address,const quint16 port);
 
        bool WriteSocket(QByteArray message);
 };

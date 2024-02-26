@@ -6,9 +6,8 @@
 #include <QTcpSocket>
 #include <QDebug>
 #include <QTimer>
-#include "hsmsgemglobal.h"
+#include "hsmssecs2.h"
 #include "itemglobal.h"
-#include "qcommunicationstatemachine.h"
 #include "itemfactory.h"
 
 /**
@@ -31,8 +30,14 @@ public:
 
 private slots:
 
+    void on_pushButton_bulidupconncet_clicked();
+
 private:
     Ui::HSMSGEM *ui;
+
+    HSMSSECS2 *hs;
+
+    void buildupConnection();
 
 signals:
 

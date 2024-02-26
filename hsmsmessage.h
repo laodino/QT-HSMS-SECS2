@@ -139,7 +139,7 @@ public:
      * @param SB  SystemByte
      * @param MT  MessageText
      */
-    void setData(const uint16_t SID,const uint8_t HB2,const uint8_t HB3,const uint8_t PT,const uint8_t ST,const uint8_t SB,const QByteArray &MT);
+    void setData(const uint16_t SID, const uint8_t HB2, const uint8_t HB3, const uint8_t PT, const uint8_t ST, const uint32_t SB, const QByteArray &MT);
 
     uint8_t getStype();
 

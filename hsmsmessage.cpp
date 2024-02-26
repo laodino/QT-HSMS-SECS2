@@ -1,5 +1,5 @@
 ﻿#include "hsmsmessage.h"
-
+#pragma execution_character_set("utf-8")
 HSMSMessage::HSMSMessage()
 {
 
@@ -13,7 +13,7 @@ HSMSMessage::~HSMSMessage()
 QByteArray HSMSMessage::data()
 {
     //如果是SnFn，不是事务
-    if(PType==0)
+    if(SType==0)
     {
         //sessionID由方向和设备ID组成
         SessionID = (Direction&0x8000)|(EquipID&0x7FFF);
@@ -31,7 +31,7 @@ QByteArray HSMSMessage::data()
     messageByteArray.append(QByteArray::fromHex(QString("%1").arg(SType,2,16,QLatin1Char('0')).toUtf8()));
     messageByteArray.append(QByteArray::fromHex(QString("%1").arg(SystemBytes,8,16,QLatin1Char('0')).toUtf8()));
     messageByteArray.append(MessageText);
-    qDebug()<<messageByteArray.toHex();
+    qDebug()<<"HSMSMessageData:"<<messageByteArray.toHex().toUpper();
     return messageByteArray;
 }
 
@@ -58,8 +58,8 @@ bool HSMSMessage::fromByteArray(QByteArray messageByteArray)
     QDataStream msb(messageByteArray.mid(10,4));
     msb>>SystemBytes;
     MessageText = messageByteArray.mid(14);
-    //处理非事务得情况
-    if(PType==0){
+    //处理非事务情况
+    if(SType==0){
         Direction = SessionID>>15;
         EquipID = SessionID&0x7FFF;
 
@@ -69,7 +69,7 @@ bool HSMSMessage::fromByteArray(QByteArray messageByteArray)
     return true;
 }
 
-void HSMSMessage::setData(const uint16_t SID,const uint8_t HB2,const uint8_t HB3,const uint8_t PT,const uint8_t ST,const uint8_t SB,const QByteArray &MT)
+void HSMSMessage::setData(const uint16_t SID,const uint8_t HB2,const uint8_t HB3,const uint8_t PT,const uint8_t ST,const uint32_t SB,const QByteArray &MT)
 {
     SessionID = SID;
     HeaderByte2 = HB2;
@@ -78,6 +78,14 @@ void HSMSMessage::setData(const uint16_t SID,const uint8_t HB2,const uint8_t HB3
     SType = ST;
     SystemBytes =SB;
     MessageText = MT;
+   qDebug()<<"SetData"
+    <<"SessionID"<<SessionID
+    <<"HeaderByte2"<<HeaderByte2
+    <<"HeaderByte3"<<HeaderByte3
+    <<"PType"<<PType
+    <<"SType"<<SType
+    <<"SystemBytes"<<SystemBytes
+    <<"MessageText"<<MessageText;
 }
 
 uint8_t HSMSMessage::getStype()
@@ -98,13 +106,14 @@ uint32_t HSMSMessage::getSystemByte()
 QDebug operator<<(QDebug dbg,const HSMSMessage &hm)
 {
     QDebugStateSaver stateSaver(dbg);
-    dbg <<QString("%1").arg(hm.MessageLength,8,16,QLatin1Char('0')).toUtf8()
-       <<QString("%1").arg(hm.SessionID,4,16,QLatin1Char('0')).toUtf8()
-      <<QString("%1").arg( hm.HeaderByte2,2,16,QLatin1Char('0')).toUtf8()
-     <<QString("%1").arg( hm.HeaderByte3,2,16,QLatin1Char('0')).toUtf8()
-    <<QString("%1").arg( hm.PType,2,16,QLatin1Char('0')).toUtf8()
-    <<QString("%1").arg( hm.SType,2,16,QLatin1Char('0')).toUtf8()
-    <<QString("%1").arg( hm.SystemBytes,8,16,QLatin1Char('0')).toUtf8()
-    <<hm.MessageText;
+    dbg
+    <<"MessageLength:"<<QString("%1").arg(hm.MessageLength,8,16,QLatin1Char('0')).toUtf8()<<"\r\n"
+    <<"SessionID"<<QString("%1").arg(hm.SessionID,4,16,QLatin1Char('0')).toUtf8()<<"\r\n"
+    <<"HeaderByte2"<<QString("%1").arg( hm.HeaderByte2,2,16,QLatin1Char('0')).toUtf8()<<"\r\n"
+    <<"HeaderByte3"<<QString("%1").arg( hm.HeaderByte3,2,16,QLatin1Char('0')).toUtf8()<<"\r\n"
+    <<"PType"<<QString("%1").arg( hm.PType,2,16,QLatin1Char('0')).toUtf8()<<"\r\n"
+    <<"SType"<<QString("%1").arg( hm.SType,2,16,QLatin1Char('0')).toUtf8()<<"\r\n"
+    <<"SystemBytes"<<QString("%1").arg( hm.SystemBytes,8,16,QLatin1Char('0')).toUtf8()<<"\r\n"
+    <<"MessageText"<<hm.MessageText;
     return dbg;
 }
